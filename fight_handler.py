@@ -12,7 +12,7 @@ class FightHandler:
         self._team2: Team = Team(2)
         self._class_list: list[str] = ["Warrior", "Mage", "Thief"] #TODO add other classes
     
-    def team_choices(self):
+    def manual_team_creation(self):
         # afficher classes disponibles
         string = ""
         
@@ -24,33 +24,30 @@ class FightHandler:
             
         # repète jusqu'à team full
         while len(self._team1.get_team()) != 4: 
-            print(Panel.fit(string, title="[bold]Choose a class", border_style="blue", padding=1))
+            print(Panel.fit(string, title=f"[bold]Choose a class {len(self._team1.get_team())+1}/4", border_style="blue", padding=1), "")
             # choisir classe
             try:
                 class_choice = int(input("Enter a class of the list : "))
             except:
-                print(f"Choose a number between 1 and {len(self._class_list)}")
+                print(f"Choose a number between 1 and {len(self._class_list)}\n")
                 continue
             if class_choice < 1 or class_choice > len(self._class_list):
-                print(f"Choose a number between 1 and {len(self._class_list)}")
+                print(f"Choose a number between 1 and {len(self._class_list)}\n")
                 continue
             
             # choisir nom perso
             name_choice = str(input("Enter a Name for the character : "))
+            print("")
             
             # ajoute dans la team
-            class_adding = f'{self._class_list[class_choice-1]}("{name_choice}", 20, 8, 3, Dice(6))' #!TODO plus besoin de préciser les stats
-            self._team1.add_character(eval(class_adding))
-        
-        print(Panel.fit(self._team1.print_team(), title="[bold]This is your team", border_style="blue", padding=1))
+            new_character = f'{self._class_list[class_choice-1]}("{name_choice}", 20, 8, 3, Dice(6))' #!TODO plus besoin de préciser les stats
+            self._team1.add_character(eval(new_character))
     
-    # TODO Modifier pour passer en paramètre une team (cas où flemme de faire sa team)
-    def team_ordi(self):
+    def auto_team_creation(self, team: Team) -> Team:
         for i in range(4):
-            class_adding = f'{choice(self._class_list)}("{Faker().first_name()}", 20, 8, 3, Dice(6))' #!TODO plus besoin de préciser les stats
-            self._team2.add_character(eval(class_adding))
-            
-        print(Panel.fit(self._team2.print_team(), title="[bold]This is opponent team", border_style="red", padding=1))
+            new_character = f'{choice(self._class_list)}("{Faker().first_name()}", 20, 8, 3, Dice(6))' #!TODO plus besoin de préciser les stats
+            team.add_character(eval(new_character))            
+        return team
         
     def fight_order(self) -> tuple[Team,Team]:
         teams = [self._team1, self._team2]
@@ -60,19 +57,9 @@ class FightHandler:
         
     
     def battle(self):
-        # TODO team1_attacker_position devient attribut de classe Team pareil pour defender pos
-        self.team_choices()
-        self.team_ordi()
         attacking_team, defending_team, = self.fight_order()
-        # team1_attacker_position = 0
-        # team2_attacker_position = 0
+        
         while (not self._team1.all_members_dead() and not self._team2.all_members_dead()):
-            
-            # attacker_position = 0
-            # if attacking_team.get_team_number() == 1:
-            #     attacker_position = team1_attacker_position
-            # else:
-            #     attacker_position = team2_attacker_position
             
             defender_position = len(defending_team.get_team())-defending_team.get_nb_members_alive()
             defending_team.set_defender_position(defender_position)
@@ -83,7 +70,11 @@ class FightHandler:
             attacker.attack(defender)
             
             if not defender.is_alive():
-                defending_team.member_death(defending_team.get_defender_position())
+                defending_team.member_death(defender_position)
+            
+            battleground = f"{attacking_team.team_attacker_highlight()}{' '*8}{defending_team.team_defender_highlight()}"
+            battleground_panel = Panel.fit(battleground, title=f"Team n°{attacking_team.get_team_number()} turn", padding=1, title_align="left")
+            print(battleground_panel, "")
                 
             attacking_team.set_attacker_position(attacking_team.get_attacker_position()+1)
             
@@ -95,29 +86,38 @@ class FightHandler:
             if (not defender.is_alive()) and (defender_position == defending_team.get_attacker_position()) and (not defending_team.all_members_dead()):
                     defending_team.set_attacker_position(defending_team.get_attacker_position()+1)
                 
-            # if attacking_team.get_team_number() == 1:
-            #     team1_attacker_position += 1
-            #     if team1_attacker_position >= len(attacking_team.get_team()):
-            #         team1_attacker_position = len(attacking_team.get_team())-attacking_team.get_nb_members_alive()
-                    
-            #     # Gestion du cas où le défenseur qui est mort est le prochain attaquant
-            #     if (not defender.is_alive()) and (defender_position == team2_attacker_position) and (not defending_team.all_members_dead()):
-            #         team2_attacker_position += 1
-            # else:
-            #     team2_attacker_position += 1
-            #     if team2_attacker_position >= len(attacking_team.get_team()):
-            #         team2_attacker_position = len(attacking_team.get_team())-attacking_team.get_nb_members_alive()
-
-            #     # Gestion du cas où le défenseur qui est mort est le prochain attaquant
-            #     if (not defender.is_alive()) and (defender_position == team1_attacker_position) and (not defending_team.all_members_dead()):
-            #         team1_attacker_position += 1
-                
             attacking_team, defending_team = defending_team, attacking_team
                 
         if self._team2.all_members_dead():
             print(f"[bold green]Your team won !")
         else:
             print(f"[bold red]Enemy team won !")
-    
-    def print_recap(self):
-        pass
+            
+    def start_battle(self):
+        team_creation_panel = Panel.fit(f"Choose your team creation method :\n1. Manual (Select a class and enter a name for each character of your team)\n2. Auto (A random team will be generated for you)", title="[bold blue]Team Creation", border_style="blue", padding=1, title_align="left")
+        print(team_creation_panel, "")
+        is_user_choice_valid = False
+        while not is_user_choice_valid:
+            try:
+                user_choice = int(input("Enter a method number : "))
+                print("")
+            except:
+                print(f"Choose a number between 1 and 2")
+                continue
+            if user_choice == 1:
+                self.manual_team_creation()
+                self._team2 = self.auto_team_creation(self._team2)
+                is_user_choice_valid = True
+            elif user_choice == 2:
+                self._team1 = self.auto_team_creation(self._team1)
+                self._team2 = self.auto_team_creation(self._team2)
+                is_user_choice_valid = True
+            else:
+                print(f"Choose a number between 1 and 2")
+        
+        player_team_panel = Panel.fit(self._team1.__str__(), title="[bold]This is your team", border_style="blue", padding=1, title_align="left")
+        enemy_team_panel = Panel.fit(self._team2.__str__(), title="[bold]This is opponent team", border_style="red", padding=1, title_align="left")
+        print(player_team_panel, "")
+        print(enemy_team_panel, "")
+        
+        self.battle()
