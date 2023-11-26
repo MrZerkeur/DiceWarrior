@@ -64,42 +64,53 @@ class FightHandler:
         self.team_choices()
         self.team_ordi()
         attacking_team, defending_team, = self.fight_order()
-        team1_attacker_position = 0
-        team2_attacker_position = 0
+        # team1_attacker_position = 0
+        # team2_attacker_position = 0
         while (not self._team1.all_members_dead() and not self._team2.all_members_dead()):
             
-            attacker_position = 0
-            if attacking_team.get_team_number() == 1:
-                attacker_position = team1_attacker_position
-            else:
-                attacker_position = team2_attacker_position
+            # attacker_position = 0
+            # if attacking_team.get_team_number() == 1:
+            #     attacker_position = team1_attacker_position
+            # else:
+            #     attacker_position = team2_attacker_position
             
-            defender_position = len(defending_team.get_team())-defending_team.get_nb_members_alive()    
+            defender_position = len(defending_team.get_team())-defending_team.get_nb_members_alive()
+            defending_team.set_defender_position(defender_position)
             
-            attacker = attacking_team.get_team()[attacker_position]
-            defender = defending_team.get_team()[defender_position]
+            attacker = attacking_team.get_team()[attacking_team.get_attacker_position()]
+            defender = defending_team.get_team()[defending_team.get_defender_position()]
             
             attacker.attack(defender)
             
             if not defender.is_alive():
-                defending_team.member_death(defender_position)
+                defending_team.member_death(defending_team.get_defender_position())
                 
-            if attacking_team.get_team_number() == 1:
-                team1_attacker_position += 1
-                if team1_attacker_position >= len(attacking_team.get_team()):
-                    team1_attacker_position = len(attacking_team.get_team())-attacking_team.get_nb_members_alive()
+            attacking_team.set_attacker_position(attacking_team.get_attacker_position()+1)
+            
+            # Gestion du cas où la position du prochain attaquant de l'équipe qui vient d'attaquer est en dehors de la liste
+            if attacking_team.get_attacker_position() >= len(attacking_team.get_team()):
+                attacking_team.set_attacker_position(len(attacking_team.get_team())-attacking_team.get_nb_members_alive())
+                
+            # Gestion du cas où le défenseur qui est mort est le prochain attaquant
+            if (not defender.is_alive()) and (defender_position == defending_team.get_attacker_position()) and (not defending_team.all_members_dead()):
+                    defending_team.set_attacker_position(defending_team.get_attacker_position()+1)
+                
+            # if attacking_team.get_team_number() == 1:
+            #     team1_attacker_position += 1
+            #     if team1_attacker_position >= len(attacking_team.get_team()):
+            #         team1_attacker_position = len(attacking_team.get_team())-attacking_team.get_nb_members_alive()
                     
-                # Gestion du cas où le défenseur qui est mort est le prochain attaquant
-                if (not defender.is_alive()) and (defender_position == team2_attacker_position) and (not defending_team.all_members_dead()):
-                    team2_attacker_position += 1
-            else:
-                team2_attacker_position += 1
-                if team2_attacker_position >= len(attacking_team.get_team()):
-                    team2_attacker_position = len(attacking_team.get_team())-attacking_team.get_nb_members_alive()
+            #     # Gestion du cas où le défenseur qui est mort est le prochain attaquant
+            #     if (not defender.is_alive()) and (defender_position == team2_attacker_position) and (not defending_team.all_members_dead()):
+            #         team2_attacker_position += 1
+            # else:
+            #     team2_attacker_position += 1
+            #     if team2_attacker_position >= len(attacking_team.get_team()):
+            #         team2_attacker_position = len(attacking_team.get_team())-attacking_team.get_nb_members_alive()
 
-                # Gestion du cas où le défenseur qui est mort est le prochain attaquant
-                if (not defender.is_alive()) and (defender_position == team1_attacker_position) and (not defending_team.all_members_dead()):
-                    team1_attacker_position += 1
+            #     # Gestion du cas où le défenseur qui est mort est le prochain attaquant
+            #     if (not defender.is_alive()) and (defender_position == team1_attacker_position) and (not defending_team.all_members_dead()):
+            #         team1_attacker_position += 1
                 
             attacking_team, defending_team = defending_team, attacking_team
                 
