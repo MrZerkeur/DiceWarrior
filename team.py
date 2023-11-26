@@ -6,6 +6,8 @@ class Team:
         self._team_number = team_number
         self._team: list[Character] = []
         self._nb_members_alive = 0
+        self._attacker_position = 0
+        self._defender_position = 0
         
     def get_team(self) -> list[Character]:
         return self._team
@@ -16,6 +18,18 @@ class Team:
     def get_nb_members_alive(self) -> int:
         return self._nb_members_alive
     
+    def get_attacker_position(self) -> int:
+        return self._attacker_position
+    
+    def set_attacker_position(self, new_position) -> None:
+        self._attacker_position = new_position
+        
+    def get_defender_position(self) -> int:
+        return self._defender_position
+    
+    def set_defender_position(self, new_position) -> None:
+        self._defender_position = new_position
+    
     def add_character(self, char : Character)-> str:
         if len(self._team) == 4:
             return
@@ -23,11 +37,11 @@ class Team:
         self._nb_members_alive += 1
         print(f"{char.get_name()} added to team n°{self._team_number}")
         
-    def member_death(self, pos = 0)-> None:
+    def member_death(self, position)-> None:
         if self._nb_members_alive == 0:
             return
-        dead_member = self._team.pop(pos)
-        self._team.append(dead_member)
+        dead_member = self._team[position]
+        print(f"[bold red]{dead_member.get_name()} from team n°{self._team_number} is dead -> POSITION {position}\n")
         self._nb_members_alive -= 1
         
     def all_members_dead(self)-> bool:
@@ -39,6 +53,5 @@ class Team:
         team_string = ""
         for index, char in enumerate(self._team):
             team_string += f"{char.get_name()} ({char.__class__.__name__})"
-            if index != len(self._team) -1:
-                team_string += ' - '
+            team_string += ' - ' if index != len(self._team) -1 else ''
         return team_string

@@ -8,8 +8,8 @@ from random import choice
 
 class FightHandler:
     def __init__(self) -> None:
-        self._team1: Team() = Team(1)
-        self._team2: Team() = Team(2)
+        self._team1: Team = Team(1)
+        self._team2: Team = Team(2)
         self._class_list: list[str] = ["Warrior", "Mage", "Thief"] #TODO add other classes
     
     def team_choices(self):
@@ -43,19 +43,70 @@ class FightHandler:
             self._team1.add_character(eval(class_adding))
         
         print(Panel.fit(self._team1.print_team(), title="[bold]This is your team", border_style="blue", padding=1))
-        
-            
-    #TODO faire methode composition team ordi
     
+    # TODO Modifier pour passer en paramètre une team (cas où flemme de faire sa team)
     def team_ordi(self):
         for i in range(4):
             class_adding = f'{choice(self._class_list)}("{Faker().first_name()}", 20, 8, 3, Dice(6))' #!TODO plus besoin de préciser les stats
             self._team2.add_character(eval(class_adding))
             
         print(Panel.fit(self._team2.print_team(), title="[bold]This is opponent team", border_style="red", padding=1))
+        
+    def fight_order(self) -> tuple[Team,Team]:
+        teams = [self._team1, self._team2]
+        first_team = choice(teams)
+        teams.remove(first_team)
+        return first_team, teams[0]
+        
     
-    def fight(self):
-        pass
+    def battle(self):
+        # TODO team1_attacker_position devient attribut de classe Team pareil pour defender pos
+        self.team_choices()
+        self.team_ordi()
+        attacking_team, defending_team, = self.fight_order()
+        team1_attacker_position = 0
+        team2_attacker_position = 0
+        while (not self._team1.all_members_dead() and not self._team2.all_members_dead()):
+            
+            attacker_position = 0
+            if attacking_team.get_team_number() == 1:
+                attacker_position = team1_attacker_position
+            else:
+                attacker_position = team2_attacker_position
+            
+            defender_position = len(defending_team.get_team())-defending_team.get_nb_members_alive()    
+            
+            attacker = attacking_team.get_team()[attacker_position]
+            defender = defending_team.get_team()[defender_position]
+            
+            attacker.attack(defender)
+            
+            if not defender.is_alive():
+                defending_team.member_death(defender_position)
+                
+            if attacking_team.get_team_number() == 1:
+                team1_attacker_position += 1
+                if team1_attacker_position >= len(attacking_team.get_team()):
+                    team1_attacker_position = len(attacking_team.get_team())-attacking_team.get_nb_members_alive()
+                    
+                # Gestion du cas où le défenseur qui est mort est le prochain attaquant
+                if (not defender.is_alive()) and (defender_position == team2_attacker_position) and (not defending_team.all_members_dead()):
+                    team2_attacker_position += 1
+            else:
+                team2_attacker_position += 1
+                if team2_attacker_position >= len(attacking_team.get_team()):
+                    team2_attacker_position = len(attacking_team.get_team())-attacking_team.get_nb_members_alive()
+
+                # Gestion du cas où le défenseur qui est mort est le prochain attaquant
+                if (not defender.is_alive()) and (defender_position == team1_attacker_position) and (not defending_team.all_members_dead()):
+                    team1_attacker_position += 1
+                
+            attacking_team, defending_team = defending_team, attacking_team
+                
+        if self._team2.all_members_dead():
+            print(f"[bold green]Your team won !")
+        else:
+            print(f"[bold red]Enemy team won !")
     
     def print_recap(self):
         pass
