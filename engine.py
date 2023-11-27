@@ -1,14 +1,13 @@
-from character import Warrior, Mage, Thief, Character
+from character import Warrior, Wizard, Character, Thief, Tank
 from dice import Dice
 
 import random
 
 def main():
-    warrior = Warrior("James", 20, 8, 3, Dice(6))
-    mage = Mage("Elisa", 20, 8, 3, Dice(6))
-    thief = Thief("Bastien", 20, 8, 3, Dice(6))
+    warrior = Warrior("James")
+    thief = Thief("Timmy")
     
-    cars: list[Character] = [warrior, mage, thief]
+    cars: list[Character] = [warrior, thief]
     stats = {}
     
     char1 = random.choice(cars)
@@ -23,7 +22,7 @@ def main():
     stats[char1.get_name()] = 0
     stats[char2.get_name()] = 0
 
-    for i in range(100):
+    for i in range(10):
         print(f"--------------------")
         print(f"Round n°{i+1}")
         
