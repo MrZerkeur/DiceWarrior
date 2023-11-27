@@ -4,6 +4,7 @@ from rich import print
 from rich.panel import Panel
 from faker import Faker
 from random import choice
+from rich.table import Table
 
 
 class FightHandler:
@@ -62,7 +63,10 @@ class FightHandler:
         
     def battle(self):
         attacking_team, defending_team, = self.fight_order()
-        
+        kills = {}
+        for char in attacking_team.get_team() + defending_team.get_team():
+            kills[char] = 0
+            
         while (not self._team1.all_members_dead() and not self._team2.all_members_dead()):
             
             defender_position = len(defending_team.get_team())-defending_team.get_nb_members_alive()
@@ -71,10 +75,11 @@ class FightHandler:
             attacker = attacking_team.get_team()[attacking_team.get_attacker_position()]
             defender = defending_team.get_team()[defending_team.get_defender_position()]
             
-            attacker.attack(defender)
+            attacker.action(defender, attacking_team.get_team())
             
             if not defender.is_alive():
                 defending_team.member_death(defender_position)
+                kills[attacker] += 1
             
             panel_color = ""
             battleground = ""
@@ -104,6 +109,31 @@ class FightHandler:
             print(f"[bold green]Your team won !")
         else:
             print(f"[bold red]Enemy team won !")
+        
+        table = Table(title="Recap")
+        table.add_column("Character")
+        table.add_column("Kill_Nb")
+        
+        for char in dict(sorted(kills.items(), key = lambda item: item[1], reverse=True)) :
+            table.add_row(char.get_name(), str(kills[char]))
+        
+        print(table)
+        
+        # Relancer un combat
+        rematch = ""    
+        while rematch != "yes" or "no":
+            try:
+                rematch = input("Do you want play again ? (yes or no) : ")
+            except:
+                print("Choose yes or no\n")
+                continue
+            if rematch == "yes":
+                self._team1.regenerate_team()
+                self._team2.regenerate_team()
+                self.start_battle()
+                print("\n")
+            elif rematch == "no" :   
+                exit(0)   
             
     def start_battle(self):
         team_creation_panel = Panel.fit(f"Choose your team creation method :\n1. Manual (Select a class and enter a name for each character of your team)\n2. Auto (A random team will be generated for you)", title="[bold blue]Team Creation", border_style="blue", padding=1, title_align="left")

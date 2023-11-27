@@ -58,6 +58,9 @@ class Character:
         print(f"⚔️ {self._name} attack {target.get_name()} with {damages} damages in your face ! (attack: {self._attack_value} + roll: {roll})")
         target.defense(damages, self)
     
+    def action(self, target: Character, team: list[Character]):
+        self.attack(target)
+    
     def compute_wounds(self, damages, roll, attacker):
         if (damages - self._defense_value - roll) >= 0:
             return damages - self._defense_value - roll
@@ -83,6 +86,10 @@ class Warrior(Character):
         self._dice = Dice(6)
     
     def compute_damages(self, roll, target):
+        roll = self._dice.roll()
+        while roll % 6 == 0:
+            print(f"{self._name} rolls a 6! Rerolling...")
+            roll += self._dice.roll()
         print("🪓 Bonus: Axe in your face (+3 attack)")
         return super().compute_damages(roll, target) + 3
 
@@ -127,33 +134,47 @@ class Wizard(Character):
         self._initial_defense = 3
         self._dice = Dice(6)
     
-    def attack(self, target: Character):
+    def action(self, target: Character, team: list[Character]):
         action = random.choice(["heal", "increase_attack", "increase_defense", "attack"])
         
         if action == "heal":
-            self.heal()
+            self.heal(team)
         elif action == "increase_attack":
-            self.increase_attack()
+            self.increase_attack(team)
         elif action == "increase_defense":
-            self.increase_defense()
+            self.increase_defense(team)
         elif action == "attack":
             super().attack(target)
 
-    def heal(self):
-        regenerated_hp = min(5, self._max_health - self._current_health)
-        self._current_health += regenerated_hp
-        print(f"❤️‍🩹 {self._name} magically regenerates {regenerated_hp} HP!")
-        
+    def heal(self, team: list[Character]):
+        for char in team:
+            if not char.is_alive():
+                continue
+            regenerated_hp = min(5, char._max_health - char._current_health)
+            char._current_health += regenerated_hp
+            print(f"❤️‍🩹 {char._name} magically regenerates {regenerated_hp} HP!")
+            break
 
-    def increase_attack(self):
+    def increase_attack(self, team: list[Character]):
         attack_increase = random.randint(1, 10)
-        self._attack_value += attack_increase
-        print(f"🆙⚔️ {self._name}'s attack increases by {attack_increase}!")
+        
+        buffed_character = random.choice(team)
+        while not buffed_character.is_alive():
+            buffed_character = random.choice(team)
+            
+        buffed_character._attack_value += attack_increase
+        print(f"🆙⚔️ {buffed_character._name}'s attack increases by {attack_increase}!")
 
-    def increase_defense(self):
+    def increase_defense(self, team: list[Character]):
         defense_increase = random.randint(1, 10)
-        self._defense_value += defense_increase
-        print(f"🆙🛡️ {self._name}'s defense increases by {defense_increase}!")
+        
+        buffed_character = random.choice(team)
+        while not buffed_character.is_alive():
+            buffed_character = random.choice(team)
+        
+        buffed_character._defense_value += defense_increase
+        print(f"🆙🛡️ {buffed_character._name}'s defense increases by {defense_increase}!")
+        
 
 if __name__ == "__main__":
     a_dice = Dice(6)
