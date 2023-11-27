@@ -44,7 +44,7 @@ class Character:
         
     def show_healthbar(self):
         missing_hp = self._max_health - self._current_health
-        healthbar = f"[{'🥰' * self._current_health}{'🖤' * missing_hp}] {self._current_health}/{self._max_health}hp"
+        healthbar = f"[{'🤍' * self._current_health}{'🖤' * missing_hp}] {self._current_health}/{self._max_health}hp"
         print(healthbar)
 
     def compute_damages(self, roll, target):
@@ -121,8 +121,8 @@ class Wizard(Character):
         self._name = name
         self._max_health = 25
         self._current_health = 25
-        self._attack_value = 8
-        self._initial_attack = 8
+        self._attack_value = 12
+        self._initial_attack = 10
         self._defense_value = 3
         self._initial_defense = 3
         self._dice = Dice(6)
