@@ -7,10 +7,10 @@ from random import choice
 
 
 class FightHandler:
-    def __init__(self) -> None:
+    def __init__(self, class_list) -> None:
         self._team1: Team = Team(1)
         self._team2: Team = Team(2)
-        self._class_list: list[str] = ["Warrior", "Mage", "Thief"] #TODO add other classes
+        self._class_list: list[str] = class_list
     
     def manual_team_creation(self):
         # afficher classes disponibles
@@ -25,9 +25,12 @@ class FightHandler:
         # repète jusqu'à team full
         while len(self._team1.get_team()) != 4: 
             print(Panel.fit(string, title=f"[bold]Choose a class {len(self._team1.get_team())+1}/4", border_style="blue", padding=1), "")
+            class_choice = (input("Enter a class of the list (to quit type exit) : "))
+            if class_choice == "exit" :
+                exit(0)
             # choisir classe
             try:
-                class_choice = int(input("Enter a class of the list : "))
+                class_choice = int(class_choice)
             except:
                 print(f"Choose a number between 1 and {len(self._class_list)}\n")
                 continue
@@ -36,16 +39,18 @@ class FightHandler:
                 continue
             
             # choisir nom perso
-            name_choice = str(input("Enter a Name for the character : "))
+            name_choice = str(input("Enter a Name for the character (to quit type exit) : "))
+            if name_choice == "exit" :
+                exit(0)            
             print("")
             
             # ajoute dans la team
-            new_character = f'{self._class_list[class_choice-1]}("{name_choice}", 20, 8, 3, Dice(6))' #!TODO plus besoin de préciser les stats
+            new_character = f'{self._class_list[class_choice-1]}("{name_choice}")' #!TODO plus besoin de préciser les stats , 20, 8, 3, Dice(6)
             self._team1.add_character(eval(new_character))
     
     def auto_team_creation(self, team: Team) -> Team:
         for i in range(4):
-            new_character = f'{choice(self._class_list)}("{Faker().first_name()}", 20, 8, 3, Dice(6))' #!TODO plus besoin de préciser les stats
+            new_character = f'{choice(self._class_list)}("{Faker().first_name()}")' #!TODO plus besoin de préciser les stats , 20, 8, 3, Dice(6)
             team.add_character(eval(new_character))            
         return team
         
@@ -55,7 +60,6 @@ class FightHandler:
         teams.remove(first_team)
         return first_team, teams[0]
         
-    
     def battle(self):
         attacking_team, defending_team, = self.fight_order()
         
@@ -72,8 +76,16 @@ class FightHandler:
             if not defender.is_alive():
                 defending_team.member_death(defender_position)
             
-            battleground = f"{attacking_team.team_attacker_highlight()}{' '*8}{defending_team.team_defender_highlight()}"
-            battleground_panel = Panel.fit(battleground, title=f"Team n°{attacking_team.get_team_number()} turn", padding=1, title_align="left")
+            panel_color = ""
+            battleground = ""
+            if attacking_team.get_team_number() == 1:
+                battleground = f"{attacking_team.team_attacker_highlight(True)}{' '*8}{defending_team.team_defender_highlight(False)}"
+                panel_color = "blue"
+            else:
+                battleground = f"{defending_team.team_defender_highlight(True)}{' '*8}{attacking_team.team_attacker_highlight(False)}"
+                panel_color = "red"
+            
+            battleground_panel = Panel.fit(battleground, title=f"Team n°{attacking_team.get_team_number()} turn", padding=1, title_align="left", border_style=panel_color)
             print(battleground_panel, "")
                 
             attacking_team.set_attacker_position(attacking_team.get_attacker_position()+1)
@@ -98,8 +110,11 @@ class FightHandler:
         print(team_creation_panel, "")
         is_user_choice_valid = False
         while not is_user_choice_valid:
+            user_choice = input("Enter a method number (to quit type exit) : ")
+            if user_choice == "exit":
+                exit(0)
             try:
-                user_choice = int(input("Enter a method number : "))
+                user_choice = int(user_choice)
                 print("")
             except:
                 print(f"Choose a number between 1 and 2")

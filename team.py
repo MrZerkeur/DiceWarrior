@@ -52,11 +52,16 @@ class Team:
         for character in self._team:
             character.regenerate()
             
-    def team_attacker_highlight(self) -> str:
+    def team_attacker_highlight(self, need_to_reverse: bool) -> str:
         team_string = ""
+        attacker_pos = self._attacker_position
         
-        for index, char in enumerate(list(reversed(self._team))):
-            if index == len(self._team) - 1 - self._attacker_position:
+        if need_to_reverse:
+            self._team.reverse()
+            attacker_pos = len(self._team) - 1 - self._attacker_position
+            
+        for index, char in enumerate(self._team):
+            if index == attacker_pos:
                 team_string += f"[bold green]{char.get_name()}[/bold green]"
             elif not char.is_alive():
                 team_string += f"[strike]{char.get_name()}[/strike]"
@@ -64,20 +69,32 @@ class Team:
                 team_string += f"{char.get_name()}"
             team_string += ' - ' if index != len(self._team) -1 else ''
             
+        if need_to_reverse:
+            self._team.reverse()
+            
         return team_string
     
-    def team_defender_highlight(self) -> str:
+    def team_defender_highlight(self, need_to_reverse: bool) -> str:
         team_string = ""
+        defender_pos = self._defender_position
+        
+        if need_to_reverse:
+            self._team.reverse()
+            defender_pos = len(self._team) - 1 - self._defender_position
+        
         for index, char in enumerate(self._team):
-            if index == self._defender_position:
+            if index == defender_pos:
                 team_string += f"[bold red]{char.get_name()}[/bold red]"
             elif not char.is_alive():
                 team_string += f"[strike]{char.get_name()}[/strike]"
             else:
                 team_string += f"{char.get_name()}"
             team_string += ' - ' if index != len(self._team) -1 else ''
-        return team_string
             
+        if need_to_reverse:
+            self._team.reverse()
+            
+        return team_string
         
     def __str__(self) -> str:
         team_string = ""
