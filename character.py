@@ -70,6 +70,8 @@ class Character:
     def defense(self, damages, attacker):
         roll = self._dice.roll()
         wounds = self.compute_wounds(damages, roll, attacker)
+        if wounds < 0:
+            wounds = 0
         print(f"🛡️ {self._name} take {wounds} wounds from {attacker.get_name()} in his face ! (damages: {damages} - defense: {self._defense_value} - roll: {roll})")
         self.decrease_health(wounds)
 
@@ -166,7 +168,7 @@ class Wizard(Character):
         print(f"🆙⚔️ {buffed_character._name}'s attack increases by {attack_increase}!")
 
     def increase_defense(self, team: list[Character]):
-        defense_increase = random.randint(1, 10)
+        defense_increase = random.randint(1, 5)
         
         buffed_character = random.choice(team)
         while not buffed_character.is_alive():
