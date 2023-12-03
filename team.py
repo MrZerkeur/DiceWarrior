@@ -1,4 +1,4 @@
-from character import *
+from character import Character
 from rich import print
 
 class Team:
@@ -40,7 +40,7 @@ class Team:
         if self._nb_members_alive == 0:
             return
         dead_member = self._team[position]
-        print(f"[bold red]{dead_member.get_name()} from team n°{self._team_number} is dead -> POSITION {position}\n")
+        print(f"[red]{dead_member.get_name()}[/red] from team n°{self._team_number} is [bold red]dead[/bold red]\n")
         self._nb_members_alive -= 1
         
     def all_members_dead(self)-> bool:
@@ -51,6 +51,10 @@ class Team:
     def regenerate_team(self) -> None:
         for character in self._team:
             character.regenerate()
+            character.set_is_poisoned(False)
+            character.reset_defense_value()
+            character.reset_attack_value()
+        self._nb_members_alive = 4
             
     def team_attacker_highlight(self, need_to_reverse: bool) -> str:
         team_string = ""
@@ -83,7 +87,9 @@ class Team:
             defender_pos = len(self._team) - 1 - self._defender_position
         
         for index, char in enumerate(self._team):
-            if index == defender_pos:
+            if index == defender_pos and not char.is_alive():
+                team_string += f"[bold strike red]{char.get_name()}[/bold strike red]"
+            elif index == defender_pos:
                 team_string += f"[bold red]{char.get_name()}[/bold red]"
             elif not char.is_alive():
                 team_string += f"[strike]{char.get_name()}[/strike]"

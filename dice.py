@@ -17,14 +17,3 @@ class RiggedDice(Dice):
     
     def roll(self, rigged=False):
         return self._faces if rigged else super().roll()
-
-if __name__ == "__main__":
-    a_dice = Dice()
-    print(a_dice)
-    print(a_dice.roll())
-
-    a_rigged_dice = RiggedDice()
-
-    for i in range(1000):
-        print(a_rigged_dice.roll())
-        # a_rigged_dice.roll()
