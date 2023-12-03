@@ -16,6 +16,7 @@ class Character:
         self._initial_attack = attack
         self._defense_value = defense
         self._initial_defense = defense
+        self._is_poisoned = False
         self._dice = dice
         
     def __str__(self):
@@ -55,7 +56,7 @@ class Character:
             return
         roll = self._dice.roll()
         damages = self.compute_damages(roll, target)
-        print(f"⚔️ {self._name} attack {target.get_name()} with {damages} damages in your face ! (attack: {self._attack_value} + roll: {roll})")
+        print(f"⚔️ {self._name} attack {target.get_name()} with {damages} ! (attack: {self._attack_value} + roll: {roll})")
         target.defense(damages, self)
     
     def action(self, target: Character, team: list[Character]):
@@ -72,8 +73,14 @@ class Character:
         wounds = self.compute_wounds(damages, roll, attacker)
         if wounds < 0:
             wounds = 0
-        print(f"🛡️ {self._name} take {wounds} wounds from {attacker.get_name()} in his face ! (damages: {damages} - defense: {self._defense_value} - roll: {roll})")
+        print(f"🛡️ {self._name} take {wounds} wounds from {attacker.get_name()} ! (damages: {damages} - defense: {self._defense_value} - roll: {roll})")
+        if self._is_poisoned:
+            print(f"🧪{self._name} takes 5 additional poison damage!")
+            wounds += 5
         self.decrease_health(wounds)
+        
+    def set_is_poisoned(self, is_poisoned: bool):
+        self._is_poisoned = is_poisoned
 
 
 class Warrior(Character):
@@ -85,15 +92,17 @@ class Warrior(Character):
         self._initial_attack = 8
         self._defense_value = 3
         self._initial_defense = 3
+        self._is_poisoned = False
         self._dice = Dice(6)
     
     def compute_damages(self, roll, target):
         roll = self._dice.roll()
         while roll % 6 == 0:
-            print(f"{self._name} rolls a 6! Rerolling...")
+            print(f"{self._name} rolls a ✨6✨! Rerolling...")
             roll += self._dice.roll()
         print("🪓 Bonus: Axe in your face (+3 attack)")
         return super().compute_damages(roll, target) + 3
+    
 
 class Tank(Character):
     def __init__(self, name: str) -> None:
@@ -104,11 +113,17 @@ class Tank(Character):
         self._initial_attack = 8
         self._defense_value = 3
         self._initial_defense = 3
+        self._is_poisoned = False
         self._dice = Dice(6)
     
     def compute_wounds(self, damages, roll, attacker):
         print(" Bonus: armor (-3 wounds)")
+        roll = self._dice.roll()
+        while roll % 6 == 0:
+            print(f"{self._name} rolls a ✨6✨! Rerolling...")
+            roll += self._dice.roll()
         return super().compute_wounds(damages, roll, attacker) - 3
+    
 
 class Thief(Character):
     def __init__(self, name: str) -> None:
@@ -119,12 +134,37 @@ class Thief(Character):
         self._initial_attack = 8
         self._defense_value = 3
         self._initial_defense = 3
+        self._is_poisoned = False
         self._dice = Dice(6)
     
     def compute_damages(self, roll, target: Character):
-        print(f"🔪 Bonus: Sneacky attack (ignore defense: + {target.get_defense_value()} bonus)")
+        print(f"🗡️ Bonus: Sneacky attack (ignore defense: + {target.get_defense_value()} bonus)")
         return super().compute_damages(roll, target) + target.get_defense_value()
+    
+    
+class Alchemist(Character):
+    def __init__(self, name: str) -> None:
+        self._name = name
+        self._max_health = 25
+        self._current_health = 25
+        self._attack_value = 8
+        self._initial_attack = 8
+        self._defense_value = 3
+        self._initial_defense = 3
+        self._is_poisoned = False
+        self._dice = Dice(6)
 
+    def poison(self, target: Character):
+        target.set_is_poisoned(True)
+        print(f"🧪{self._name} poisons {target._name}! {target._name} is now poisoned.")
+        
+    def action(self, target: Character, team: list[Character]):
+        if random.randint(0,100) < 26:
+            self.poison(target)
+        else:
+            self.attack(target)
+            
+        
 class Wizard(Character):
     def __init__(self, name: str) -> None:
         self._name = name
@@ -134,6 +174,7 @@ class Wizard(Character):
         self._initial_attack = 10
         self._defense_value = 3
         self._initial_defense = 3
+        self._is_poisoned = False
         self._dice = Dice(6)
     
     def action(self, target: Character, team: list[Character]):

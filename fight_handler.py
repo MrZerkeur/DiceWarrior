@@ -110,12 +110,14 @@ class FightHandler:
         else:
             print(f"[bold red]Enemy team won !")
         
-        table = Table(title="Recap")
+        table = Table(title="Fight Recap")
         table.add_column("Character")
-        table.add_column("Kill_Nb")
+        table.add_column("Kills")
+        table.add_column("Status")
         
         for char in dict(sorted(kills.items(), key = lambda item: item[1], reverse=True)) :
-            table.add_row(char.get_name(), str(kills[char]))
+            is_alive_sign = "" if char.is_alive() else "X"
+            table.add_row(char.get_name(), str(kills[char]), is_alive_sign)
         
         print(table)
         
