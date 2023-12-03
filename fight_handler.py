@@ -104,28 +104,31 @@ class FightHandler:
                     defending_team.set_attacker_position(defending_team.get_attacker_position()+1)
                 
             attacking_team, defending_team = defending_team, attacking_team
+            
+            input("Press enter to next turn...")
                 
         if self._team2.all_members_dead():
-            print(f"[bold green]Your team won !")
+            print(f"[bold green]Your team won !\n")
         else:
-            print(f"[bold red]Enemy team won !")
+            print(f"[bold red]Enemy team won !\n")
         
-        table = Table(title="Fight Recap")
-        table.add_column("Character")
-        table.add_column("Kills")
-        table.add_column("Status")
+        recap_table = Table(title="Fight Recap", leading=1, title_justify="center", title_style="bold")
+        recap_table.add_column("Character")
+        recap_table.add_column("Kills", justify="center")
+        recap_table.add_column("Current State", justify="center")
+        recap_table.grid_style = "heavy"
         
         for char in dict(sorted(kills.items(), key = lambda item: item[1], reverse=True)) :
-            is_alive_sign = "" if char.is_alive() else "X"
-            table.add_row(char.get_name(), str(kills[char]), is_alive_sign)
+            is_alive_sign = "[green]Alive" if char.is_alive() else "[red]Dead"
+            recap_table.add_row(f"{char.get_name()} ({char.__class__.__name__})", str(kills[char]), is_alive_sign)
         
-        print(table)
+        print(recap_table)
         
         # Relancer un combat
         rematch = ""    
         while rematch != "yes" or "no":
             try:
-                rematch = input("Do you want play again ? (yes or no) : ")
+                rematch = input("Do you want to rematch ? (yes or no) : ")
             except:
                 print("Choose yes or no\n")
                 continue

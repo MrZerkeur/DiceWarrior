@@ -7,7 +7,6 @@ import random
 print("\n")
 
 class Character:
-    
     def __init__(self, name: str, max_health: int, attack: int, defense: int, dice) -> None:
         self._name = name
         self._max_health = max_health
@@ -28,6 +27,12 @@ class Character:
     def get_defense_value(self):
         return self._defense_value
     
+    def reset_defense_value(self):
+        self._defense_value = self._initial_defense
+        
+    def reset_attack_value(self):
+        self._attack_value = self._initial_attack
+    
     def is_alive(self):
         # return bool(self._current_health)
         return self._current_health > 0
@@ -45,7 +50,7 @@ class Character:
         
     def show_healthbar(self):
         missing_hp = self._max_health - self._current_health
-        healthbar = f"[{'🤍' * self._current_health}{'🖤' * missing_hp}] {self._current_health}/{self._max_health}hp"
+        healthbar = f"{self._name} - [{'🟥' * self._current_health}{'⬛' * missing_hp}] {self._current_health}/{self._max_health}hp"
         print(healthbar)
 
     def compute_damages(self, roll, target):
@@ -56,7 +61,11 @@ class Character:
             return
         roll = self._dice.roll()
         damages = self.compute_damages(roll, target)
-        print(f"⚔️ {self._name} attack {target.get_name()} with {damages} ! (attack: {self._attack_value} + roll: {roll})")
+        attack_recap = f"Turn :\n- [green]{self._name}[/green] attack [red]{target.get_name()}[/red].\n  - [green]{self._name}[/green] Attack : {damages} (Base Damage: {self._attack_value} + Attack Roll: {roll}" 
+        if damages - self._attack_value - roll != 0:
+            attack_recap += f" + Bonus Damage: {damages - self._attack_value - roll}"
+        attack_recap += ")"
+        print(attack_recap)
         target.defense(damages, self)
     
     def action(self, target: Character, team: list[Character]):
@@ -73,10 +82,15 @@ class Character:
         wounds = self.compute_wounds(damages, roll, attacker)
         if wounds < 0:
             wounds = 0
-        print(f"🛡️ {self._name} take {wounds} wounds from {attacker.get_name()} ! (damages: {damages} - defense: {self._defense_value} - roll: {roll})")
+        defense_recap = f"  - [red]{self._name}[/red] defense : {damages - wounds} (Base Defense: {self._defense_value} + Roll: {roll}"
+        if (damages - self._defense_value - roll) - wounds > 0:
+            defense_recap += f" + Bonus Defense: {damages - self._defense_value - roll}"
+        defense_recap += ")\n"
         if self._is_poisoned:
-            print(f"🧪{self._name} takes 5 additional poison damage!")
             wounds += 5
+            defense_recap += "  - Bonus Damage : 🧪 Poison (+5)\n"
+        defense_recap += f"  - Total Damage : {wounds}\n  - [red]{self._name}[/red] takes {wounds} damages."
+        print(defense_recap)
         self.decrease_health(wounds)
         
     def set_is_poisoned(self, is_poisoned: bool):
@@ -98,9 +112,7 @@ class Warrior(Character):
     def compute_damages(self, roll, target):
         roll = self._dice.roll()
         while roll % 6 == 0:
-            print(f"{self._name} rolls a ✨6✨! Rerolling...")
             roll += self._dice.roll()
-        print("🪓 Bonus: Axe in your face (+3 attack)")
         return super().compute_damages(roll, target) + 3
     
 
@@ -117,7 +129,6 @@ class Tank(Character):
         self._dice = Dice(6)
     
     def compute_wounds(self, damages, roll, attacker):
-        print(" Bonus: armor (-3 wounds)")
         roll = self._dice.roll()
         while roll % 6 == 0:
             print(f"{self._name} rolls a ✨6✨! Rerolling...")
@@ -138,7 +149,6 @@ class Thief(Character):
         self._dice = Dice(6)
     
     def compute_damages(self, roll, target: Character):
-        print(f"🗡️ Bonus: Sneacky attack (ignore defense: + {target.get_defense_value()} bonus)")
         return super().compute_damages(roll, target) + target.get_defense_value()
     
     
@@ -156,7 +166,7 @@ class Alchemist(Character):
 
     def poison(self, target: Character):
         target.set_is_poisoned(True)
-        print(f"🧪{self._name} poisons {target._name}! {target._name} is now poisoned.")
+        print(f"Turn :\n- 🧪 [green]{self._name}[/green] poisons [red]{target._name}[/red].\n  - [red]{target._name}[/red] is now poisoned and takes 5 damages each time he is attacked.")
         
     def action(self, target: Character, team: list[Character]):
         if random.randint(0,100) < 26:
@@ -195,7 +205,8 @@ class Wizard(Character):
                 continue
             regenerated_hp = min(5, char._max_health - char._current_health)
             char._current_health += regenerated_hp
-            print(f"❤️‍🩹 {char._name} magically regenerates {regenerated_hp} HP!")
+            print(f"Turn :\n- [green]{self._name}[/green] heals [blue]{char._name}[/blue].\n  - Heal Value : {regenerated_hp}\n  - ❤️‍🩹 [blue]{char._name}[/blue] regenerates {regenerated_hp} HP.")
+            char.show_healthbar()
             break
 
     def increase_attack(self, team: list[Character]):
@@ -206,7 +217,7 @@ class Wizard(Character):
             buffed_character = random.choice(team)
             
         buffed_character._attack_value += attack_increase
-        print(f"🆙⚔️ {buffed_character._name}'s attack increases by {attack_increase}!")
+        print(f"Turn :\n- [green]{self._name}[/green] buffs [blue]{buffed_character._name}[/blue].\n  - Buff Value : {attack_increase}\n  - New Attack Value : {buffed_character._attack_value}\n  - 🆙⚔️ [blue]{buffed_character._name}[/blue]'s attack increases by {attack_increase}.")
 
     def increase_defense(self, team: list[Character]):
         defense_increase = random.randint(1, 5)
@@ -216,17 +227,5 @@ class Wizard(Character):
             buffed_character = random.choice(team)
         
         buffed_character._defense_value += defense_increase
-        print(f"🆙🛡️ {buffed_character._name}'s defense increases by {defense_increase}!")
+        print(f"Turn :\n- [green]{self._name}[/green] buffs [blue]{buffed_character._name}[/blue].\n  - Buff Value : {defense_increase}\n  - New Defense Value : {buffed_character._defense_value}\n  - 🆙🛡️ [blue]{buffed_character._name}[/blue]'s defense increases by {defense_increase}.")
         
-
-if __name__ == "__main__":
-    a_dice = Dice(6)
-
-    character1 = Warrior("Gerard", 20, 8, 3, Dice(6))
-    character2 = Thief("Lisa", 20, 8, 3, Dice(6))
-    print(character1)
-    print(character2)
-    
-    while(character1.is_alive() and character2.is_alive()):
-        character1.attack(character2)
-        character2.attack(character1)

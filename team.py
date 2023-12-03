@@ -40,7 +40,7 @@ class Team:
         if self._nb_members_alive == 0:
             return
         dead_member = self._team[position]
-        print(f"[bold red]{dead_member.get_name()} from team n°{self._team_number} is dead -> POSITION {position}\n")
+        print(f"[red]{dead_member.get_name()}[/red] from team n°{self._team_number} is [bold red]dead[/bold red]\n")
         self._nb_members_alive -= 1
         
     def all_members_dead(self)-> bool:
@@ -51,6 +51,9 @@ class Team:
     def regenerate_team(self) -> None:
         for character in self._team:
             character.regenerate()
+            character.set_is_poisoned(False)
+            character.reset_defense_value()
+            character.reset_attack_value()
         self._nb_members_alive = 4
             
     def team_attacker_highlight(self, need_to_reverse: bool) -> str:
